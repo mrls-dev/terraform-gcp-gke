@@ -46,7 +46,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  TERRAFORM_VERSION: '1.5.0'
+  TERRAFORM_VERSION: '1.14.7'
   WORKING_DIR: '.'
   TF_VAR_FILE: 'dev.tfvars'
   BACKEND_CONFIG: 'backend-dev.hcl'
@@ -128,7 +128,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### Terraform GKE Cluster Plan 📊
+            const output = `#### Terraform GKE Cluster Plan
             
             **Environment**: \`${{ github.event.inputs.environment || 'dev' }}\`
             **Format Check**: \`${{ steps.fmt.outcome }}\`
@@ -217,7 +217,7 @@ jobs:
 
       - name: Deployment Summary
         run: |
-          echo "## 🚀 GKE Cluster Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "## GKE Cluster Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Cluster Name**: ${{ steps.cluster_info.outputs.cluster_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Location**: ${{ steps.cluster_info.outputs.cluster_location }}" >> $GITHUB_STEP_SUMMARY
@@ -235,10 +235,10 @@ jobs:
           echo "kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 💰 Cost Reminder" >> $GITHUB_STEP_SUMMARY
+          echo "### Cost Reminder" >> $GITHUB_STEP_SUMMARY
           echo "- **CPU Nodes**: Running (~$100/month)" >> $GITHUB_STEP_SUMMARY
           echo "- **GPU Nodes**: Will cost when scaled up (~$120/month per preemptible node)" >> $GITHUB_STEP_SUMMARY
-          echo "- **⚠️ Remember to DESTROY cluster when not in use!**" >> $GITHUB_STEP_SUMMARY
+          echo "- ** Remember to DESTROY cluster when not in use!**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "To destroy: Run workflow with 'destroy' action" >> $GITHUB_STEP_SUMMARY
 
@@ -288,7 +288,7 @@ jobs:
       - name: Confirm Destruction
         if: steps.current_cluster.outputs.exists == 'true'
         run: |
-          echo "⚠️ About to DESTROY GKE cluster: ${{ steps.current_cluster.outputs.cluster_name }}"
+          echo " About to DESTROY GKE cluster: ${{ steps.current_cluster.outputs.cluster_name }}"
           echo "This will delete:"
           echo "  - GKE cluster and all nodes"
           echo "  - All running pods and workloads"
@@ -307,17 +307,17 @@ jobs:
 
       - name: Destruction Summary
         run: |
-          echo "## 🗑️ GKE Cluster Destroyed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "## GKE Cluster Destroyed Successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment**: ${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_STEP_SUMMARY
           echo "**Cluster**: ${{ steps.current_cluster.outputs.cluster_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 💰 Cost Savings" >> $GITHUB_STEP_SUMMARY
+          echo "### Cost Savings" >> $GITHUB_STEP_SUMMARY
           echo "Cluster resources have been deleted. You are no longer incurring:" >> $GITHUB_STEP_SUMMARY
           echo "- CPU node costs (~$100/month)" >> $GITHUB_STEP_SUMMARY
           echo "- GPU node costs (if scaled up)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🚀 To Recreate Cluster" >> $GITHUB_STEP_SUMMARY
+          echo "### To Recreate Cluster" >> $GITHUB_STEP_SUMMARY
           echo "Run this workflow again with 'apply' action" >> $GITHUB_STEP_SUMMARY
 
   # Optional: Auto-destroy on schedule (e.g., every night)
