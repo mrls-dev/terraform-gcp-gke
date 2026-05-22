@@ -35,7 +35,7 @@ enable_autopilot         = false           # Standard cluster (not Autopilot)
 enable_private_cluster   = true            # Private nodes for security
 master_ipv4_cidr_block   = "172.16.0.0/28" # Control plane CIDR
 enable_workload_identity = true
-enable_network_policy    = true
+enable_network_policy    = false # Disabled - ADVANCED_DATAPATH (Dataplane V2) provides network policy enforcement
 
 ##########################
 # CPU Node Pool Configuration

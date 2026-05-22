@@ -57,14 +57,8 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Network policy
-  dynamic "network_policy" {
-    for_each = var.enable_network_policy ? [1] : []
-    content {
-      enabled  = true
-      provider = "PROVIDER_UNSPECIFIED" # GKE will use Dataplane V2
-    }
-  }
+  # Network policy is handled by ADVANCED_DATAPATH (Dataplane V2/Cilium)
+  # No need for legacy network_policy configuration
 
   # Add-ons
   addons_config {
@@ -75,7 +69,7 @@ resource "google_container_cluster" "primary" {
       disabled = false
     }
     network_policy_config {
-      disabled = !var.enable_network_policy
+      disabled = true # Must be disabled when using ADVANCED_DATAPATH
     }
     gcp_filestore_csi_driver_config {
       enabled = false
