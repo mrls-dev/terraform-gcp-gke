@@ -297,6 +297,21 @@ variable "enable_secure_boot" {
   default     = true
 }
 
+variable "master_authorized_networks" {
+  description = "List of CIDR blocks that can access the cluster master endpoint. REQUIRED: Must specify your IP addresses in tfvars file for security."
+  type = list(object({
+    cidr_block   = string
+    display_name = string
+  }))
+  # No default - forces explicit configuration in tfvars for security
+}
+
+variable "enable_binary_authorization" {
+  description = "Enable Binary Authorization to only allow trusted container images. Recommended for production."
+  type        = bool
+  default     = false
+}
+
 variable "maintenance_window_start" {
   description = "Maintenance window start time (HH:MM format, UTC)"
   type        = string

@@ -83,6 +83,19 @@ gpu_node_taints = [{
 enable_shielded_nodes = true
 enable_secure_boot    = true
 
+# Master authorized networks - Only these IPs can access the cluster API
+# CRITICAL: This prevents unauthorized access to your cluster control plane
+master_authorized_networks = [
+  {
+    cidr_block   = "65.36.58.100/32"
+    display_name = "Restricted access"
+  }
+]
+
+# Binary Authorization - Only allows approved container images
+# Set to true in production to prevent untrusted images from running
+enable_binary_authorization = false
+
 ##########################
 # Maintenance Window
 ##########################

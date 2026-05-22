@@ -41,11 +41,14 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Master authorized networks (can be customized)
+  # Master authorized networks - controls who can access the cluster API
   master_authorized_networks_config {
-    cidr_blocks {
-      cidr_block   = "0.0.0.0/0"
-      display_name = "All networks" # Tighten this in production
+    dynamic "cidr_blocks" {
+      for_each = var.master_authorized_networks
+      content {
+        cidr_block   = cidr_blocks.value.cidr_block
+        display_name = cidr_blocks.value.display_name
+      }
     }
   }
 
@@ -79,9 +82,9 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Binary authorization
+  # Binary authorization - only allows signed/approved container images
   binary_authorization {
-    evaluation_mode = "DISABLED" # Enable for production
+    evaluation_mode = var.enable_binary_authorization ? "PROJECT_SINGLETON_POLICY_ENFORCE" : "DISABLED"
   }
 
   # Maintenance window
