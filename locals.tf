@@ -14,8 +14,8 @@ locals {
   subnet_self_link  = data.terraform_remote_state.network.outputs.app_subnet_id
 
   # Pod and service IP ranges (secondary ranges in subnet)
-  pods_ip_range_name     = "pods"
-  services_ip_range_name = "services"
+  pods_ip_range_name     = "gke-pods-${var.environment}"
+  services_ip_range_name = "gke-services-${var.environment}"
 
   # Common labels
   common_labels = merge(
