@@ -10,8 +10,8 @@ locals {
   gpu_pool_name = var.enable_gpu_node_pool ? "${local.cluster_name}-${var.gpu_node_pool_name}" : ""
 
   # Network data from remote state
-  network_self_link = data.terraform_remote_state.network.outputs.network_self_link
-  subnet_self_link  = data.terraform_remote_state.network.outputs.app_subnet_self_link
+  network_self_link = data.terraform_remote_state.network.outputs.vpc_self_link
+  subnet_self_link  = data.terraform_remote_state.network.outputs.app_subnet_id
 
   # Pod and service IP ranges (secondary ranges in subnet)
   pods_ip_range_name     = "pods"
