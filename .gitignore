@@ -1,0 +1,95 @@
+# Terraform Files
+*.tfstate
+*.tfstate.*
+*.tfvars
+!dev.tfvars
+!terraform.tfvars.example
+!examples/**/*.tfvars
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Sensitive Files
+*.key
+*.key.json
+*.pem
+*.p12
+*.pfx
+*-key.json
+credentials.json
+service-account*.json
+
+# IDE & Editor Files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS Files
+Thumbs.db
+desktop.ini
+
+# Build & Cache
+.cache/
+tmp/
+temp/
+*.tmp
+
+# Logs
+*.log
+logs/
+
+# Backup Files
+*.bak
+*.backup
+*~
+
+# Archive Files
+*.tar.gz
+*.zip
+*.rar
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/
+ENV/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ruby
+*.gem
+.bundle/
+vendor/
+
+# Testing
+.tox/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Kubeconfig (generated)
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+
+# Scripts that might contain secrets
+*secret*.sh
+*password*.sh

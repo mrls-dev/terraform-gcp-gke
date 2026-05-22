@@ -1,0 +1,345 @@
+name: Terraform - GKE Cluster
+
+on:
+  # Manual trigger with action selection
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform action to perform'
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+        default: 'plan'
+      environment:
+        description: 'Environment to deploy/destroy'
+        required: true
+        type: choice
+        options:
+          - dev
+        default: 'dev'
+
+  # Automatic triggers
+  push:
+    branches:
+      - main
+    paths:
+      - '**.tf'
+      - '**.tfvars'
+      - '**.hcl'
+      - '.github/workflows/terraform-gke.yml'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**.tf'
+      - '**.tfvars'
+      - '**.hcl'
+      - '.github/workflows/terraform-gke.yml'
+
+# Prevent concurrent runs to avoid state conflicts
+concurrency:
+  group: terraform-gke-${{ github.event.inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
+env:
+  TERRAFORM_VERSION: '1.5.0'
+  WORKING_DIR: '.'
+  TF_VAR_FILE: 'dev.tfvars'
+  BACKEND_CONFIG: 'backend-dev.hcl'
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  terraform-plan:
+    name: 'Terraform Plan'
+    runs-on: ubuntu-latest
+    # Run plan on: PRs, manual plan, or push to main (before apply)
+    if: |
+      github.event_name == 'pull_request' ||
+      github.event.inputs.action == 'plan' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    outputs:
+      plan_exitcode: ${{ steps.plan.outputs.exitcode }}
+      plan_outcome: ${{ steps.plan.outcome }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/123485395082/locations/global/workloadIdentityPools/github-pool-app/providers/github-provider-app'
+          service_account: 'terraform@project-70f3c2b9-8f91-41f7-b5c.iam.gserviceaccount.com'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Format Check
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config=${{ env.BACKEND_CONFIG }}
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan \
+            -var-file=${{ env.TF_VAR_FILE }} \
+            -out=tfplan \
+            -no-color \
+            -detailed-exitcode || echo "exitcode=$?" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Save Plan
+        if: steps.plan.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ github.event.inputs.environment || 'dev' }}
+          path: tfplan
+          retention-days: 5
+
+      - name: Comment PR with Plan
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PLAN: "${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform GKE Cluster Plan 📊
+            
+            **Environment**: \`${{ github.event.inputs.environment || 'dev' }}\`
+            **Format Check**: \`${{ steps.fmt.outcome }}\`
+            **Initialization**: \`${{ steps.init.outcome }}\`
+            **Validation**: \`${{ steps.validate.outcome }}\`
+            **Plan**: \`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`terraform
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            #### 💰 Cost Estimate
+            **GKE Cluster**: Free (zonal cluster)
+            **CPU Nodes**: ~$100/month (1-5 nodes autoscaling)
+            **GPU Nodes**: ~$0-360/month (0-3 preemptible T4 nodes, scale-to-zero)
+            
+            **Total Monthly Cost**: ~$100-460/month depending on usage
+            
+            💡 **Tip**: Destroy cluster when not in use to save costs!
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      - name: Plan Status Check
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  terraform-apply:
+    name: 'Terraform Apply (Create/Update Cluster)'
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    # Run apply only on: manual apply action OR auto-deploy on main push
+    if: |
+      (github.event.inputs.action == 'apply' && github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    
+    environment:
+      name: ${{ github.event.inputs.environment || 'dev' }}
+    
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/123485395082/locations/global/workloadIdentityPools/github-pool-app/providers/github-provider-app'
+          service_account: 'terraform@project-70f3c2b9-8f91-41f7-b5c.iam.gserviceaccount.com'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: terraform init -backend-config=${{ env.BACKEND_CONFIG }}
+
+      - name: Terraform Apply
+        id: apply
+        run: |
+          terraform apply \
+            -var-file=${{ env.TF_VAR_FILE }} \
+            -auto-approve
+
+      - name: Get Cluster Info
+        id: cluster_info
+        run: |
+          echo "cluster_name=$(terraform output -raw cluster_name)" >> $GITHUB_OUTPUT
+          echo "cluster_location=$(terraform output -raw cluster_location)" >> $GITHUB_OUTPUT
+          echo "kubectl_cmd=$(terraform output -raw kubectl_config_command)" >> $GITHUB_OUTPUT
+
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 GKE Cluster Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Cluster Name**: ${{ steps.cluster_info.outputs.cluster_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Location**: ${{ steps.cluster_info.outputs.cluster_location }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quick Start Commands" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "# Configure kubectl" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.cluster_info.outputs.kubectl_cmd }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Verify cluster" >> $GITHUB_STEP_SUMMARY
+          echo "kubectl get nodes" >> $GITHUB_STEP_SUMMARY
+          echo "kubectl get nodes -L cloud.google.com/gke-nodepool" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Install NVIDIA GPU drivers (if using GPU nodes)" >> $GITHUB_STEP_SUMMARY
+          echo "kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 💰 Cost Reminder" >> $GITHUB_STEP_SUMMARY
+          echo "- **CPU Nodes**: Running (~$100/month)" >> $GITHUB_STEP_SUMMARY
+          echo "- **GPU Nodes**: Will cost when scaled up (~$120/month per preemptible node)" >> $GITHUB_STEP_SUMMARY
+          echo "- **⚠️ Remember to DESTROY cluster when not in use!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To destroy: Run workflow with 'destroy' action" >> $GITHUB_STEP_SUMMARY
+
+  terraform-destroy:
+    name: 'Terraform Destroy (Delete Cluster)'
+    runs-on: ubuntu-latest
+    # Only run on manual destroy action
+    if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch'
+    
+    environment:
+      name: ${{ github.event.inputs.environment || 'dev' }}-destroy
+    
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/123485395082/locations/global/workloadIdentityPools/github-pool-app/providers/github-provider-app'
+          service_account: 'terraform@project-70f3c2b9-8f91-41f7-b5c.iam.gserviceaccount.com'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: terraform init -backend-config=${{ env.BACKEND_CONFIG }}
+
+      - name: Get Current Cluster Info
+        id: current_cluster
+        run: |
+          if terraform state list | grep -q google_container_cluster.primary; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "cluster_name=$(terraform output -raw cluster_name 2>/dev/null || echo 'unknown')" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Confirm Destruction
+        if: steps.current_cluster.outputs.exists == 'true'
+        run: |
+          echo "⚠️ About to DESTROY GKE cluster: ${{ steps.current_cluster.outputs.cluster_name }}"
+          echo "This will delete:"
+          echo "  - GKE cluster and all nodes"
+          echo "  - All running pods and workloads"
+          echo "  - LoadBalancers and associated resources"
+          echo ""
+          echo "Persistent volumes and data may be deleted!"
+          echo "Proceeding with destruction in 10 seconds..."
+          sleep 10
+
+      - name: Terraform Destroy
+        id: destroy
+        run: |
+          terraform destroy \
+            -var-file=${{ env.TF_VAR_FILE }} \
+            -auto-approve
+
+      - name: Destruction Summary
+        run: |
+          echo "## 🗑️ GKE Cluster Destroyed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment**: ${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Cluster**: ${{ steps.current_cluster.outputs.cluster_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 💰 Cost Savings" >> $GITHUB_STEP_SUMMARY
+          echo "Cluster resources have been deleted. You are no longer incurring:" >> $GITHUB_STEP_SUMMARY
+          echo "- CPU node costs (~$100/month)" >> $GITHUB_STEP_SUMMARY
+          echo "- GPU node costs (if scaled up)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 To Recreate Cluster" >> $GITHUB_STEP_SUMMARY
+          echo "Run this workflow again with 'apply' action" >> $GITHUB_STEP_SUMMARY
+
+  # Optional: Auto-destroy on schedule (e.g., every night)
+  # Uncomment to enable automatic nightly shutdown
+  # scheduled-destroy:
+  #   name: 'Scheduled Destroy (Cost Savings)'
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'schedule'
+  #   # Add to 'on:' section: schedule: - cron: '0 2 * * *'  # 2 AM UTC daily
+  #   steps:
+  #     - name: Trigger Destroy Workflow
+  #       uses: actions/github-script@v7
+  #       with:
+  #         github-token: ${{ secrets.GITHUB_TOKEN }}
+  #         script: |
+  #           await github.rest.actions.createWorkflowDispatch({
+  #             owner: context.repo.owner,
+  #             repo: context.repo.repo,
+  #             workflow_id: 'terraform-gke.yml',
+  #             ref: 'main',
+  #             inputs: {
+  #               action: 'destroy',
+  #               environment: 'dev'
+  #             }
+  #           })
