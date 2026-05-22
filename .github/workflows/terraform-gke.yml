@@ -60,10 +60,11 @@ jobs:
   terraform-plan:
     name: 'Terraform Plan'
     runs-on: ubuntu-latest
-    # Run plan on: PRs, manual plan, or push to main (before apply)
+    # Run plan on: PRs, manual plan/apply, or push to main (before apply)
     if: |
       github.event_name == 'pull_request' ||
       github.event.inputs.action == 'plan' ||
+      github.event.inputs.action == 'apply' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main')
     
     defaults:
