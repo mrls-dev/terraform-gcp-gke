@@ -92,32 +92,31 @@ output "kubectl_test_command" {
 ##########################
 output "gpu_driver_installer_daemonset" {
   description = "Command to install NVIDIA GPU drivers via DaemonSet"
-  value = var.enable_gpu_node_pool ? "kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml" : "N/A - GPU node pool not enabled"
+  value       = var.enable_gpu_node_pool ? "kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml" : "N/A - GPU node pool not enabled"
 }
 
 output "gpu_test_pod" {
   description = "Sample pod manifest to test GPU functionality"
-  value       = var.enable_gpu_node_pool ? <<-EOF
-apiVersion: v1
-kind: Pod
-metadata:
-  name: gpu-test
-spec:
-  restartPolicy: Never
-  containers:
-  - name: cuda-test
-    image: nvidia/cuda:12.2.0-base-ubuntu22.04
-    command: ["nvidia-smi"]
-    resources:
-      limits:
-        nvidia.com/gpu: 1
-  tolerations:
-  - key: nvidia.com/gpu
-    operator: Equal
-    value: present
-    effect: NoSchedule
-EOF
-  : "N/A - GPU node pool not enabled"
+  value       = <<-EOF
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: gpu-test
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: cuda-test
+        image: nvidia/cuda:12.2.0-base-ubuntu22.04
+        command: ["nvidia-smi"]
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Equal
+        value: present
+        effect: NoSchedule
+  EOF
 }
 
 ##########################
@@ -158,14 +157,14 @@ output "cost_estimate_monthly" {
 output "resource_summary" {
   description = "Summary of deployed resources"
   value = {
-    cluster_name        = local.cluster_name
-    cluster_location    = var.zone
-    cpu_nodes           = "${var.cpu_min_node_count}-${var.cpu_max_node_count} nodes (${var.cpu_machine_type})"
-    gpu_nodes           = var.enable_gpu_node_pool ? "${var.gpu_min_node_count}-${var.gpu_max_node_count} nodes (${var.gpu_machine_type} with ${var.gpu_count_per_node}x ${var.gpu_type})" : "Disabled"
-    kubernetes_version  = data.google_container_engine_versions.gke_version.latest_master_version
-    workload_identity   = var.enable_workload_identity
-    network_policy      = var.enable_network_policy
-    private_cluster     = var.enable_private_cluster
+    cluster_name       = local.cluster_name
+    cluster_location   = var.zone
+    cpu_nodes          = "${var.cpu_min_node_count}-${var.cpu_max_node_count} nodes (${var.cpu_machine_type})"
+    gpu_nodes          = var.enable_gpu_node_pool ? "${var.gpu_min_node_count}-${var.gpu_max_node_count} nodes (${var.gpu_machine_type} with ${var.gpu_count_per_node}x ${var.gpu_type})" : "Disabled"
+    kubernetes_version = data.google_container_engine_versions.gke_version.latest_master_version
+    workload_identity  = var.enable_workload_identity
+    network_policy     = var.enable_network_policy
+    private_cluster    = var.enable_private_cluster
   }
 }
 
@@ -174,7 +173,7 @@ output "resource_summary" {
 ##########################
 output "quick_start_guide" {
   description = "Quick start commands to get started with the cluster"
-  value = <<-EOF
+  value       = <<-EOF
     # Configure kubectl
     ${local.cluster_name != "" ? "gcloud container clusters get-credentials ${google_container_cluster.primary.name} --zone=${google_container_cluster.primary.location} --project=${var.project_id}" : ""}
     
