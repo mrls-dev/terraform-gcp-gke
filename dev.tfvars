@@ -87,7 +87,7 @@ enable_secure_boot    = true
 # CRITICAL: This prevents unauthorized access to your cluster control plane
 master_authorized_networks = [
   {
-    cidr_block   = "99.6.77.1/32"
+    cidr_block   = "99.6.77.224/32"
     display_name = "Restricted access"
   }
 ]
