@@ -54,7 +54,7 @@ cpu_preemptible    = false # Use regular nodes for stability
 ##########################
 enable_gpu_node_pool = true
 gpu_node_pool_name   = "gpu-pool"
-gpu_machine_type     = "e2-standard-4"   # Compatible with T4 GPU - Better availability
+gpu_machine_type     = "n1-standard-4"   # N1 required for GPU support (E2 incompatible)
 gpu_type             = "nvidia-tesla-t4" # 16 GB VRAM, cheapest GPU option
 gpu_count_per_node   = 1                 # Number of GPUs per node
 
