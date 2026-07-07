@@ -16,7 +16,7 @@ environment        = "dev"
 # Location Configuration
 ##########################
 region = "us-central1"
-zone   = "us-central1-a" # Must match network subnet region
+zone   = "us-central1-b" # Changed from us-central1-a due to GCE_STOCKOUT capacity issue
 
 ##########################
 # Network State Configuration
