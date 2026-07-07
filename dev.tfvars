@@ -16,7 +16,7 @@ environment        = "dev"
 # Location Configuration
 ##########################
 region = "us-central1"
-zone   = "us-central1-b" # Changed from us-central1-a due to GCE_STOCKOUT capacity issue
+zone   = "us-central1-f" # Changed from us-central1-a due to GCE_STOCKOUT capacity issue
 
 ##########################
 # Network State Configuration
@@ -41,7 +41,7 @@ enable_network_policy    = false # Disabled - ADVANCED_DATAPATH (Dataplane V2) p
 # CPU Node Pool Configuration
 ##########################
 cpu_node_pool_name = "cpu-pool"
-cpu_machine_type   = "n2-standard-4" # 4 vCPU, 16 GB RAM - Better availability than N1
+cpu_machine_type   = "e2-standard-4" # 4 vCPU, 16 GB RAM - Better availability than N1
 cpu_node_count     = 1               # Initial node count
 cpu_min_node_count = 1               # Minimum for autoscaling
 cpu_max_node_count = 5               # Maximum for autoscaling
@@ -54,7 +54,7 @@ cpu_preemptible    = false # Use regular nodes for stability
 ##########################
 enable_gpu_node_pool = true
 gpu_node_pool_name   = "gpu-pool"
-gpu_machine_type     = "n2-standard-4"   # Compatible with T4 GPU - Better availability
+gpu_machine_type     = "e2-standard-4"   # Compatible with T4 GPU - Better availability
 gpu_type             = "nvidia-tesla-t4" # 16 GB VRAM, cheapest GPU option
 gpu_count_per_node   = 1                 # Number of GPUs per node
 
