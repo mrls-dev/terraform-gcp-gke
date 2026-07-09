@@ -129,8 +129,8 @@ resource "google_container_cluster" "primary" {
   }
 
   timeouts {
-    create = "30m"
-    update = "30m"
+    create = "20m"
+    update = "20m"
     delete = "15m"
   }
 
@@ -224,8 +224,8 @@ resource "google_container_node_pool" "cpu_pool" {
 
   # Timeouts - fail fast on capacity issues
   timeouts {
-    create = "30m"
-    update = "30m"
+    create = "20m"
+    update = "20m"
     delete = "15m"
   }
 }
@@ -337,8 +337,8 @@ resource "google_container_node_pool" "gpu_pool" {
   }
 
   timeouts {
-    create = "30m"
-    update = "30m"
+    create = "20m"
+    update = "20m"
     delete = "15m"
   }
 }
