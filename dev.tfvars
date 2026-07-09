@@ -17,7 +17,7 @@ environment        = "dev"
 ##########################
 region = "us-central1"
 zone   = "" # Empty = Regional cluster (distributes across us-central1-a,b,c,f)
-            # To use zonal cluster, specify zone like "us-central1-f"
+# To use zonal cluster, specify zone like "us-central1-f"
 
 ##########################
 # Network State Configuration
