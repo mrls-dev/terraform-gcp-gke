@@ -1,8 +1,6 @@
 ##########################
 # Dev Environment GKE Configuration
 ##########################
-# Production-ready GKE cluster for development with CPU and GPU node pools
-# Cost estimate: ~$100-300/month (depends on node count and GPU usage)
 
 ##########################
 # Project Configuration
@@ -16,8 +14,7 @@ environment        = "dev"
 # Location Configuration
 ##########################
 region = "us-central1"
-zone   = "us-central1-b" # Zonal cluster - confirmed E2 capacity available
-# Empty = Regional cluster (distributes across us-central1-a,b,c,f)
+zone   = "us-central1-b"
 
 ##########################
 # Network State Configuration
@@ -28,13 +25,11 @@ network_state_prefix = "network/vpc/dev"
 ##########################
 # GKE Cluster Configuration
 ##########################
-# cluster_name auto-generated: {project_name}-{environment}-gke
-# Result: cts-sample-dev-gke
 kubernetes_version       = "latest"        # Use latest stable GKE version
 release_channel          = "REGULAR"       # RAPID, REGULAR, STABLE
-enable_autopilot         = false           # Standard cluster (not Autopilot)
-enable_private_cluster   = true            # Private nodes for security
-master_ipv4_cidr_block   = "172.16.0.0/28" # Control plane CIDR
+enable_autopilot         = false           
+enable_private_cluster   = true            
+master_ipv4_cidr_block   = "172.16.0.0/28" 
 enable_workload_identity = true
 enable_network_policy    = false # Disabled - ADVANCED_DATAPATH (Dataplane V2) provides network policy enforcement
 
@@ -42,10 +37,10 @@ enable_network_policy    = false # Disabled - ADVANCED_DATAPATH (Dataplane V2) p
 # CPU Node Pool Configuration
 ##########################
 cpu_node_pool_name = "cpu-pool"
-cpu_machine_type   = "e2-standard-4" # Modern, high availability (was n1-standard-4)
-cpu_node_count     = 1               # Initial node count
-cpu_min_node_count = 1               # Minimum for autoscaling
-cpu_max_node_count = 5               # Maximum for autoscaling
+cpu_machine_type   = "e2-standard-4"
+cpu_node_count     = 1               
+cpu_min_node_count = 1               
+cpu_max_node_count = 5               
 cpu_disk_size_gb   = 100
 cpu_disk_type      = "pd-balanced"
 cpu_preemptible    = false # Use regular nodes for stability
@@ -57,12 +52,12 @@ enable_gpu_node_pool = true
 gpu_node_pool_name   = "gpu-pool"
 gpu_machine_type     = "n1-standard-4"
 gpu_type             = "nvidia-tesla-t4" # 16 GB VRAM, cheapest GPU option
-gpu_count_per_node   = 1                 # Number of GPUs per node
+gpu_count_per_node   = 1                 
 
 # Node count and autoscaling
-gpu_node_count     = 0 # Start with 0, scale up when needed
-gpu_min_node_count = 0 # Scale to 0 when no GPU workloads
-gpu_max_node_count = 3 # Maximum 3 GPU nodes
+gpu_node_count     = 0 
+gpu_min_node_count = 0 
+gpu_max_node_count = 3
 
 # Disk configuration
 gpu_disk_size_gb = 100

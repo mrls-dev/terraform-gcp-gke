@@ -218,17 +218,6 @@ Commands:
     costs       Show cost breakdown and estimates
     help        Show this help message
 
-Examples:
-    $0 status       # Check if cluster exists
-    $0 create       # Deploy cluster (costs start)
-    $0 destroy      # Delete cluster (save money)
-    $0 kubectl      # Setup kubectl access
-
-Cost Management:
-    - Cluster costs ~\$100-460/month when running
-    - GPU nodes auto-scale to 0 when idle (saves money)
-    - Destroy cluster when not in use to avoid all costs
-    - Takes 10-15 min to create, 5-10 min to destroy
 
 EOF
 }
