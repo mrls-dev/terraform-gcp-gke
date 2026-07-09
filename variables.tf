@@ -47,11 +47,12 @@ variable "region" {
 }
 
 variable "zone" {
-  description = "GCP zone for zonal cluster (e.g., us-central1-a)"
+  description = "GCP zone for zonal cluster (e.g., us-central1-a). Leave empty for regional cluster."
   type        = string
+  default     = ""
   validation {
-    condition     = can(regex("^[a-z]+-[a-z]+[0-9]+-[a-z]$", var.zone))
-    error_message = "Zone must be in format: region-zone (e.g., us-central1-a)."
+    condition     = var.zone == "" || can(regex("^[a-z]+-[a-z]+[0-9]+-[a-z]$", var.zone))
+    error_message = "Zone must be empty (for regional) or in format: region-zone (e.g., us-central1-a)."
   }
 }
 

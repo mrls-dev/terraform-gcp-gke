@@ -5,7 +5,7 @@ resource "google_container_cluster" "primary" {
   provider = google-beta
 
   name     = local.cluster_name
-  location = var.zone
+  location = var.zone != "" ? var.zone : var.region # Regional if zone is empty
 
   project = var.project_id
 
@@ -140,7 +140,7 @@ resource "google_container_node_pool" "cpu_pool" {
   provider = google-beta
 
   name     = var.cpu_node_pool_name
-  location = var.zone
+  location = var.zone != "" ? var.zone : var.region # Regional if zone is empty
   cluster  = google_container_cluster.primary.name
   project  = var.project_id
 
@@ -226,7 +226,7 @@ resource "google_container_node_pool" "gpu_pool" {
   provider = google-beta
 
   name     = var.gpu_node_pool_name
-  location = var.zone
+  location = var.zone != "" ? var.zone : var.region # Regional if zone is empty
   cluster  = google_container_cluster.primary.name
   project  = var.project_id
 

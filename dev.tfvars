@@ -16,7 +16,8 @@ environment        = "dev"
 # Location Configuration
 ##########################
 region = "us-central1"
-zone   = "us-central1-f" # Changed from us-central1-a due to GCE_STOCKOUT capacity issue
+zone   = "" # Empty = Regional cluster (distributes across us-central1-a,b,c,f)
+            # To use zonal cluster, specify zone like "us-central1-f"
 
 ##########################
 # Network State Configuration
@@ -41,7 +42,7 @@ enable_network_policy    = false # Disabled - ADVANCED_DATAPATH (Dataplane V2) p
 # CPU Node Pool Configuration
 ##########################
 cpu_node_pool_name = "cpu-pool"
-cpu_machine_type   = "n1-standard-4" # 4 vCPU, 16 GB RAM
+cpu_machine_type   = "e2-standard-4" # Modern, high availability (was n1-standard-4)
 cpu_node_count     = 1               # Initial node count
 cpu_min_node_count = 1               # Minimum for autoscaling
 cpu_max_node_count = 5               # Maximum for autoscaling
