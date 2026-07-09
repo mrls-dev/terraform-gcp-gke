@@ -203,6 +203,63 @@ jobs:
       - name: Terraform Init
         run: terraform init -backend-config=${{ env.BACKEND_CONFIG }}
 
+      - name: Import Existing Resources
+        run: |
+          set -euo pipefail
+
+          tf_value() {
+            terraform console -var-file=${{ env.TF_VAR_FILE }} <<< "$1" \
+              | tr -d '\r' \
+              | awk 'NF { line = $0 } END { print line }' \
+              | sed -e 's/^"//' -e 's/"$//'
+          }
+
+          import_if_missing() {
+            local address="$1"
+            local import_id="$2"
+
+            if terraform state list | grep -qx "$address"; then
+              echo "Terraform state already contains $address"
+              return 0
+            fi
+
+            echo "Importing $address"
+            terraform import -var-file=${{ env.TF_VAR_FILE }} "$address" "$import_id"
+          }
+
+          PROJECT_ID="$(tf_value 'var.project_id')"
+          LOCATION="$(tf_value 'var.zone != "" ? var.zone : var.region')"
+          CLUSTER_NAME="$(tf_value 'local.cluster_name')"
+          NODE_SERVICE_ACCOUNT_ID="$(tf_value 'format("%s-nodes-sa", local.cluster_name)')"
+          CPU_NODE_POOL_NAME="$(tf_value 'var.cpu_node_pool_name')"
+          GPU_NODE_POOL_ENABLED="$(tf_value 'var.enable_gpu_node_pool')"
+          GPU_NODE_POOL_NAME="$(tf_value 'var.gpu_node_pool_name')"
+
+          if gcloud container clusters describe "$CLUSTER_NAME" --location="$LOCATION" --project="$PROJECT_ID" >/dev/null 2>&1; then
+            import_if_missing \
+              "google_container_cluster.primary" \
+              "projects/$PROJECT_ID/locations/$LOCATION/clusters/$CLUSTER_NAME"
+          fi
+
+          if gcloud iam service-accounts describe "${NODE_SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com" --project="$PROJECT_ID" >/dev/null 2>&1; then
+            import_if_missing \
+              "google_service_account.gke_nodes" \
+              "projects/$PROJECT_ID/serviceAccounts/${NODE_SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
+          fi
+
+          if gcloud container node-pools describe "$CPU_NODE_POOL_NAME" --cluster="$CLUSTER_NAME" --location="$LOCATION" --project="$PROJECT_ID" >/dev/null 2>&1; then
+            import_if_missing \
+              "google_container_node_pool.cpu_pool" \
+              "projects/$PROJECT_ID/locations/$LOCATION/clusters/$CLUSTER_NAME/nodePools/$CPU_NODE_POOL_NAME"
+          fi
+
+          if [ "$GPU_NODE_POOL_ENABLED" = "true" ] && \
+             gcloud container node-pools describe "$GPU_NODE_POOL_NAME" --cluster="$CLUSTER_NAME" --location="$LOCATION" --project="$PROJECT_ID" >/dev/null 2>&1; then
+            import_if_missing \
+              "google_container_node_pool.gpu_pool[0]" \
+              "projects/$PROJECT_ID/locations/$LOCATION/clusters/$CLUSTER_NAME/nodePools/$GPU_NODE_POOL_NAME"
+          fi
+
       - name: Terraform Apply
         id: apply
         run: |
