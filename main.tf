@@ -130,9 +130,9 @@ resource "google_container_cluster" "primary" {
 
   # Timeouts - fail fast on capacity issues
   timeouts {
-    create = "15m" # Fail after 15 min instead of default 40+ min
-    update = "15m"
-    delete = "10m"
+    create = "20m" # Fail after 15 min instead of default 40+ min
+    update = "20m"
+    delete = "15m"
   }
 
   depends_on = [
@@ -225,9 +225,9 @@ resource "google_container_node_pool" "cpu_pool" {
 
   # Timeouts - fail fast on capacity issues
   timeouts {
-    create = "15m" # CPU nodes should provision in 5-10 min with regional+E2
-    update = "15m"
-    delete = "10m"
+    create = "20m" # CPU nodes should provision in 5-10 min with regional+E2
+    update = "20m"
+    delete = "15m"
   }
 }
 
@@ -339,9 +339,9 @@ resource "google_container_node_pool" "gpu_pool" {
 
   # Timeouts - fail fast on GPU capacity issues
   timeouts {
-    create = "15m" # GPU nodes can take longer, but fail if >15min
-    update = "15m"
-    delete = "10m"
+    create = "20m" # GPU nodes can take longer, but fail if >15min
+    update = "20m"
+    delete = "15m"
   }
 }
 
