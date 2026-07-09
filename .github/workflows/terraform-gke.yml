@@ -60,7 +60,7 @@ jobs:
   terraform-plan:
     name: 'Terraform Plan'
     runs-on: ubuntu-latest
-    # Run plan on: PRs, manual plan/apply, or push to main (before apply)
+    timeout-minutes: 10
     if: |
       github.event_name == 'pull_request' ||
       github.event.inputs.action == 'plan' ||
@@ -170,6 +170,7 @@ jobs:
   terraform-apply:
     name: 'Terraform Apply (Create/Update Cluster)'
     runs-on: ubuntu-latest
+    timeout-minutes: 20  # Fail fast if cluster creation takes >20min (regional+E2 should take 5-10min)
     needs: terraform-plan
     # Run apply only on: manual apply action OR auto-deploy on main push
     if: |
@@ -246,6 +247,7 @@ jobs:
   terraform-destroy:
     name: 'Terraform Destroy (Delete Cluster)'
     runs-on: ubuntu-latest
+    timeout-minutes: 15  # Cluster deletion should be quick
     # Only run on manual destroy action
     if: github.event.inputs.action == 'destroy' && github.event_name == 'workflow_dispatch'
     

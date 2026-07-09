@@ -128,6 +128,13 @@ resource "google_container_cluster" "primary" {
     ]
   }
 
+  # Timeouts - fail fast on capacity issues
+  timeouts {
+    create = "15m"  # Fail after 15 min instead of default 40+ min
+    update = "15m"
+    delete = "10m"
+  }
+
   depends_on = [
     data.terraform_remote_state.network
   ]
@@ -214,6 +221,13 @@ resource "google_container_node_pool" "cpu_pool" {
     ignore_changes = [
       initial_node_count,
     ]
+  }
+
+  # Timeouts - fail fast on capacity issues
+  timeouts {
+    create = "15m"  # CPU nodes should provision in 5-10 min with regional+E2
+    update = "15m"
+    delete = "10m"
   }
 }
 
@@ -321,6 +335,13 @@ resource "google_container_node_pool" "gpu_pool" {
     ignore_changes = [
       initial_node_count,
     ]
+  }
+
+  # Timeouts - fail fast on GPU capacity issues
+  timeouts {
+    create = "15m"  # GPU nodes can take longer, but fail if >15min
+    update = "15m"
+    delete = "10m"
   }
 }
 
