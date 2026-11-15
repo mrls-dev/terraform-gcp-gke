@@ -25,11 +25,11 @@ network_state_prefix = "network/vpc/dev"
 ##########################
 # GKE Cluster Configuration
 ##########################
-kubernetes_version       = "latest"        # Use latest stable GKE version
-release_channel          = "REGULAR"       # RAPID, REGULAR, STABLE
-enable_autopilot         = false           
-enable_private_cluster   = true            
-master_ipv4_cidr_block   = "172.16.0.0/28" 
+kubernetes_version       = "latest"  # Use latest stable GKE version
+release_channel          = "REGULAR" # RAPID, REGULAR, STABLE
+enable_autopilot         = false
+enable_private_cluster   = true
+master_ipv4_cidr_block   = "172.16.0.0/28"
 enable_workload_identity = true
 enable_network_policy    = false # Disabled - ADVANCED_DATAPATH (Dataplane V2) provides network policy enforcement
 
@@ -38,9 +38,10 @@ enable_network_policy    = false # Disabled - ADVANCED_DATAPATH (Dataplane V2) p
 ##########################
 cpu_node_pool_name = "cpu-pool"
 cpu_machine_type   = "e2-standard-4"
-cpu_node_count     = 1               
-cpu_min_node_count = 1               
-cpu_max_node_count = 5               
+cpu_node_locations = ["us-central1-b", "us-central1-c"] # per-zone counts: min 1 / max 5 each
+cpu_node_count     = 1
+cpu_min_node_count = 1
+cpu_max_node_count = 5
 cpu_disk_size_gb   = 100
 cpu_disk_type      = "pd-balanced"
 cpu_preemptible    = false # Use regular nodes for stability
@@ -52,11 +53,11 @@ enable_gpu_node_pool = true
 gpu_node_pool_name   = "gpu-pool"
 gpu_machine_type     = "n1-standard-4"
 gpu_type             = "nvidia-tesla-t4" # 16 GB VRAM, cheapest GPU option
-gpu_count_per_node   = 1                 
+gpu_count_per_node   = 1
 
 # Node count and autoscaling
-gpu_node_count     = 0 
-gpu_min_node_count = 0 
+gpu_node_count     = 0
+gpu_min_node_count = 0
 gpu_max_node_count = 3
 
 # Disk configuration

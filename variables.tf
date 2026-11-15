@@ -166,6 +166,12 @@ variable "cpu_max_node_count" {
   default     = 10
 }
 
+variable "cpu_node_locations" {
+  description = "Zones for CPU node pool nodes. Empty uses the cluster's default location."
+  type        = list(string)
+  default     = []
+}
+
 variable "cpu_disk_size_gb" {
   description = "Disk size in GB for CPU nodes"
   type        = number
