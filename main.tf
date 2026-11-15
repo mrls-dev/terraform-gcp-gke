@@ -150,6 +150,9 @@ resource "google_container_node_pool" "cpu_pool" {
   cluster  = google_container_cluster.primary.name
   project  = var.project_id
 
+  # Spread nodes across zones (counts and autoscaling limits apply per zone)
+  node_locations = length(var.cpu_node_locations) > 0 ? var.cpu_node_locations : null
+
   # Node count and autoscaling
   initial_node_count = var.cpu_node_count
 
