@@ -38,7 +38,7 @@ enable_network_policy    = false # Disabled - ADVANCED_DATAPATH (Dataplane V2) p
 ##########################
 cpu_node_pool_name = "cpu-pool"
 cpu_machine_type   = "e2-standard-4"
-cpu_node_locations = ["us-central1-b", "us-central1-c"] # per-zone counts: min 1 / max 5 each
+cpu_node_locations = ["us-central1-b"] # per-zone counts: min 1 / max 5 each
 cpu_node_count     = 1
 cpu_min_node_count = 1
 cpu_max_node_count = 5
